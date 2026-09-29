@@ -1,0 +1,37 @@
+# The build, declared. build-onion runs it, reproduces it independently,
+# seals it, and verifies every package in the image against requirements.txt.
+apiVersion: build-onion/v1
+name: pyonion
+
+builder:
+  image: docker.io/library/python:3.12-slim-bookworm@sha256:392307d22300de8b5986851a12d9176dfc0fc073e65bf6523ebd7dcbeb23564e
+
+dependencies:
+  # Hash-pinned, exported from uv.lock with:
+  #   uv export --format requirements-txt --no-emit-project --no-dev -o requirements.txt
+  lockfiles: [requirements.txt]
+  # Wheels only (no sdists, so nothing is built during fetch), each checked
+  # against its hash in requirements.txt.
+  fetch: "pip download --require-hashes --only-binary=:all: --no-deps --no-cache-dir -r requirements.txt -d /cache/wheels"
+  cache: /cache
+  env:
+    PIP_DISABLE_PIP_VERSION_CHECK: "1"
+  egress:
+    - host: pypi.org
+    - host: files.pythonhosted.org
+
+build:
+  # Offline: installs only the fetched wheels, byte-for-byte reproducibly
+  # (no bytecode, no cache), then adds the application code.
+  run: |
+    pip install --no-index --find-links /cache/wheels --require-hashes --no-deps --no-compile --no-cache-dir -r requirements.txt --target dist/site
+    cp -r src/pyonion dist/site/
+  env:
+    PIP_DISABLE_PIP_VERSION_CHECK: "1"
+    PYTHONDONTWRITEBYTECODE: "1"
+  scratch: [dist/site]
+
+outputs:
+  image:
+    name: ghcr.io/pattercj/build-onion-example-python
+    dockerfile: Dockerfile

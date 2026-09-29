@@ -1,0 +1,9 @@
+[project]
+name = "pyonion"
+version = "0.1.0"
+description = "A small Python CLI, built and verified with build-onion."
+requires-python = ">=3.12"
+dependencies = ["rich==14.1.0", "PyYAML==6.0.2"]
+
+[project.scripts]
+pyonion = "pyonion.cli:main"
