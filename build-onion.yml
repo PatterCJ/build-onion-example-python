@@ -21,6 +21,10 @@ dependencies:
     - host: files.pythonhosted.org
 
 build:
+  # The only files fetch and build can read (plus this manifest,
+  # requirements.txt and the Dockerfile).
+  inputs:
+    - src/**
   # Offline: installs only the fetched wheels, byte-for-byte reproducibly
   # (no bytecode, no cache), then adds the application code.
   run: |
