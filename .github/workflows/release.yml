@@ -15,7 +15,9 @@ jobs:
     permissions:
       contents: read
       id-token: write
-    uses: PatterCJ/build-onion/.github/workflows/onion-build.yml@5082c94d22ce3c2e4a11e45542383bd159fabe60
+    uses: PatterCJ/build-onion/.github/workflows/onion-build.yml@7483e037e54953aea2c5f3180e1bcaf526b50edb # v0.1.0
+    with:
+      policy: .build-onion/policy.yml
 
   # The pipeline's own scan. build-onion records that it ran, when, and
   # against which snapshot; what it found is for this repo's owners to act on.
@@ -81,10 +83,11 @@ jobs:
       contents: read
       id-token: write
       attestations: write
-    uses: PatterCJ/build-onion/.github/workflows/onion-verify.yml@5082c94d22ce3c2e4a11e45542383bd159fabe60
+    uses: PatterCJ/build-onion/.github/workflows/onion-verify.yml@7483e037e54953aea2c5f3180e1bcaf526b50edb # v0.1.0
     with:
       snapshot: ${{ needs.build.outputs.snapshot }}
       releasable: ${{ needs.build.outputs.releasable }}
+      policy: .build-onion/policy.yml
 
   publish:
     needs: [build, verify]
@@ -93,6 +96,8 @@ jobs:
       contents: write
       packages: write
       id-token: write
-    uses: PatterCJ/build-onion/.github/workflows/onion-publish.yml@5082c94d22ce3c2e4a11e45542383bd159fabe60
+    uses: PatterCJ/build-onion/.github/workflows/onion-publish.yml@7483e037e54953aea2c5f3180e1bcaf526b50edb # v0.1.0
     with:
       image-digest: ${{ needs.verify.outputs.image-digest }}
+      # The image the previous push to main published, if it did.
+      baseline: ghcr.io/pattercj/build-onion-example-python:sha-${{ github.event.before }}
