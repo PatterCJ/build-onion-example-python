@@ -9,14 +9,27 @@ A small Python CLI built, independently reproduced, sealed and published by [bui
 | [`build-onion.yml`](build-onion.yml) | The declared build: pinned builder image, lockfile, fetch (behind an egress allow-list), offline build, image output. |
 | [`requirements.txt`](requirements.txt) | Hash-pinned lockfile, exported from `uv.lock`. |
 | [`Dockerfile`](Dockerfile) | Assembles the image from what the offline build installed; nothing is fetched here. |
-| [`.github/workflows/release.yml`](.github/workflows/release.yml) | Calls build-onion's build, security and publish lines, and records a `pip-audit` scan against the exact source snapshot. |
+| [`.github/workflows/release.yml`](.github/workflows/release.yml) | On a signed `v*` tag: calls build-onion's build, security and publish lines, and records a `pip-audit` scan against the exact source snapshot. |
+| [`.github/workflows/ci.yml`](.github/workflows/ci.yml) | On every pull request: runs build-onion's build line. Nothing is signed. |
+| [`.build-onion/policy.yml`](.build-onion/policy.yml) | Release rules: only tags signed with the pyonion release key, required build inputs, repository protections. |
+| [`scripts/release.sh`](scripts/release.sh) | Tags `main` as a signed release. |
 
-## What happens on every push to `main`
+## Releasing
+
+Merge to `main` (the pull request has already run the build line), then:
+
+```sh
+scripts/release.sh v0.1.2
+```
+
+It signs the tag, checks the signature against the keys in `.build-onion/policy.yml`, and asks before pushing. The pushed tag starts the release; approve the publish job when it asks.
+
+## What happens on a release
 
 1. **Build line:** snapshot every source file, check pins, gate the release, fetch wheels through the egress proxy (only `pypi.org` and `files.pythonhosted.org`), and install them with no network.
 2. **Scan:** `pip-audit` runs against the locked requirements, and its run is recorded against the source snapshot.
 3. **Security line:** rebuild independently, require byte-identical output, generate the SBOM, and seal.
-4. **Publish line:** after approval, peel the image and push it by digest.
+4. **Publish line:** after approval, peel the image, compare it with the previous release, and push it by digest.
 
 ## Verify the image
 

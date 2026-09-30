@@ -1,10 +1,10 @@
 # Builds this repo through build-onion's three lines, records a pip-audit
 # scan against the exact source snapshot, and publishes only what verifies.
+# Releases come only from signed v* tags; pull requests are checked by ci.yml.
 name: release
 
 on:
   push:
-    branches: [main]
     tags: ["v*"]
   workflow_dispatch:
 
@@ -89,8 +89,26 @@ jobs:
       releasable: ${{ needs.build.outputs.releasable }}
       policy: .build-onion/policy.yml
 
+  # The release before this one: the publish line compares with it.
+  previous:
+    name: previous release
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+    outputs:
+      image: ${{ steps.find.outputs.image }}
+    steps:
+      - id: find
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          tag=$(gh release list --repo "$GITHUB_REPOSITORY" --exclude-drafts --json tagName --jq '.[].tagName' \
+            | grep -vx "$GITHUB_REF_NAME" | head -1 || true)
+          echo "previous release: ${tag:-none}"
+          if [ -n "$tag" ]; then echo "image=ghcr.io/pattercj/build-onion-example-python:$tag" >> "$GITHUB_OUTPUT"; fi
+
   publish:
-    needs: [build, verify]
+    needs: [build, verify, previous]
     if: needs.build.outputs.releasable == 'true'
     permissions:
       contents: write
@@ -99,5 +117,4 @@ jobs:
     uses: PatterCJ/build-onion/.github/workflows/onion-publish.yml@7483e037e54953aea2c5f3180e1bcaf526b50edb # v0.1.0
     with:
       image-digest: ${{ needs.verify.outputs.image-digest }}
-      # The image the previous push to main published, if it did.
-      baseline: ghcr.io/pattercj/build-onion-example-python:sha-${{ github.event.before }}
+      baseline: ${{ needs.previous.outputs.image }}

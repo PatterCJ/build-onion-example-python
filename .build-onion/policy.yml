@@ -1,8 +1,8 @@
 apiVersion: build-onion/policy/v1
 
 release:
-  # Releases come from main and from tags signed with the pyonion release key.
-  refs: [refs/heads/main, refs/tags/v*]
+  # Releases come only from v* tags signed with the pyonion release key.
+  refs: [refs/tags/v*]
   tagSigners:
     - ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIIujAjvt3dTKRNS0rPMfN1ylGIIK6gt2SPJzBC7UziH4 pyonion release key
 
