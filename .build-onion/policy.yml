@@ -1,0 +1,21 @@
+apiVersion: build-onion/policy/v1
+
+release:
+  # Releases come from signed tags and main.
+  refs: [refs/heads/main, refs/tags/v*]
+  tagSigners:
+    - ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIJkCMZITdqwz1HgiMqqI8TkJmT0MAnE723Nl24woUkCl build-onion release key
+
+# Python and Docker build files count as build configuration.
+sensitivePresets: [python, docker]
+# Every build names the files it may read, and binary files it could read
+# can't change.
+requireBuildInputs: true
+blockOpaqueInputs: true
+
+# The gate refuses to build unless these protections are in place.
+repository:
+  requirePullRequest: true
+  blockForcePush: true
+  requireCodeOwners: true
+  tagsFromDefaultBranch: true

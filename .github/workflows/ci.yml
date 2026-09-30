@@ -1,0 +1,19 @@
+# Every pull request runs build-onion's build line: staged inputs, restricted
+# fetch, hermetic build and image. Pull request builds are never sealed. Fork
+# pull requests get no OIDC token, so they skip it.
+name: ci
+
+on:
+  pull_request:
+
+permissions: {}
+
+jobs:
+  build-line:
+    if: ${{ !github.event.pull_request.head.repo.fork }}
+    permissions:
+      contents: read
+      id-token: write
+    uses: PatterCJ/build-onion/.github/workflows/onion-build.yml@7483e037e54953aea2c5f3180e1bcaf526b50edb # v0.1.0
+    with:
+      policy: .build-onion/policy.yml
