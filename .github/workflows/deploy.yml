@@ -1,0 +1,53 @@
+# A deploy gate, as a platform team would run it: an image deploys only if
+# `onion peel` verifies it against the trust file. Here the trust file is
+# demo/trust.yml; in real use it lives in a repository the app's developers
+# can't change.
+name: deploy
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Release tag to deploy, e.g. v0.1.1
+        required: true
+
+permissions: {}
+
+env:
+  # The onion that runs the gate, pinned by digest.
+  ONION_VERSION: v0.2.0
+  ONION_SHA256: 8a39b80ea38fe480176d89b21c8ddf04c194c16848523559bcc13c02d8cd0edf
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Install the pinned onion
+        run: |
+          curl -fsSL -o /tmp/onion "https://github.com/PatterCJ/build-onion/releases/download/$ONION_VERSION/onion"
+          echo "$ONION_SHA256  /tmp/onion" | sha256sum -c
+          chmod +x /tmp/onion
+      - name: Peel against the trust file
+        env:
+          TAG: ${{ inputs.tag }}
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          [[ "$TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]] || { echo "::error::not a release tag: $TAG"; exit 1; }
+          /tmp/onion peel "ghcr.io/pattercj/build-onion-example-python:$TAG" \
+            --repo "$GITHUB_REPOSITORY" --ref 'refs/tags/v*' --trust demo/trust.yml \
+            | tee -a "$GITHUB_STEP_SUMMARY"
+
+  deploy:
+    needs: verify
+    runs-on: ubuntu-24.04
+    permissions: {}
+    steps:
+      - name: Deploy
+        env:
+          TAG: ${{ inputs.tag }}
+        run: echo "Deploying ghcr.io/pattercj/build-onion-example-python:$TAG (stand-in for a real deployment)"
