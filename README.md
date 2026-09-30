@@ -12,17 +12,16 @@ A small Python CLI built, independently reproduced, sealed and published by [bui
 | [`.github/workflows/release.yml`](.github/workflows/release.yml) | On a signed `v*` tag: calls build-onion's build, security and publish lines, and records a `pip-audit` scan against the exact source snapshot. |
 | [`.github/workflows/ci.yml`](.github/workflows/ci.yml) | On every pull request: runs build-onion's build line. Nothing is signed. |
 | [`.build-onion/policy.yml`](.build-onion/policy.yml) | Release rules: only tags signed with the pyonion release key, required build inputs, repository protections. |
-| [`scripts/release.sh`](scripts/release.sh) | Tags `main` as a signed release. |
 
 ## Releasing
 
-Merge to `main` (the pull request has already run the build line), then:
+Merge to `main` (the pull request has already run the build line), then push a tag of `main` signed with the pyonion release key:
 
 ```sh
-scripts/release.sh v0.1.2
+git fetch origin && git tag -s v0.1.2 -m "pyonion v0.1.2" origin/main && git push origin v0.1.2
 ```
 
-It signs the tag, checks the signature against the keys in `.build-onion/policy.yml`, and asks before pushing. The pushed tag starts the release; approve the publish job when it asks.
+The pushed tag starts the release; the gate blocks it unless the signing key is in `.build-onion/policy.yml`. Approve the publish job when it asks.
 
 ## What happens on a release
 
