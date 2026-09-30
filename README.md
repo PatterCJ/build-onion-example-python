@@ -11,6 +11,8 @@ A small Python CLI built, independently reproduced, sealed and published by [bui
 | [`Dockerfile`](Dockerfile) | Assembles the image from what the offline build installed; nothing is fetched here. |
 | [`.github/workflows/release.yml`](.github/workflows/release.yml) | On a signed `v*` tag: calls build-onion's build, security and publish lines, and records a `pip-audit` scan against the exact source snapshot. |
 | [`.github/workflows/ci.yml`](.github/workflows/ci.yml) | On every pull request: runs build-onion's build line. Nothing is signed. |
+| [`.github/workflows/deploy.yml`](.github/workflows/deploy.yml) | A deploy gate: deploys a release only if `onion peel` verifies it against the trust file. |
+| [`demo/trust.yml`](demo/trust.yml) | The gate's trust file: which build-onion releases may seal this app, and which key may sign its release tags. |
 | [`.build-onion/policy.yml`](.build-onion/policy.yml) | Release rules: only tags signed with the pyonion release key, required build inputs, repository protections. |
 
 ## Releasing
@@ -29,6 +31,16 @@ The pushed tag starts the release; the gate blocks it unless the signing key is 
 2. **Scan:** `pip-audit` runs against the locked requirements, and its run is recorded against the source snapshot.
 3. **Security line:** rebuild independently, require byte-identical output, generate the SBOM, and seal.
 4. **Publish line:** after approval, peel the image, compare it with the previous release, and push it by digest.
+
+## Deploy gate
+
+Run the **deploy** workflow with a release tag. Its first job peels the image against [`demo/trust.yml`](demo/trust.yml) and fails unless the image was:
+
+- sealed by a build-onion release listed there,
+- built from a `v*` tag, and
+- released from a tag signed with the pyonion release key.
+
+Only then does the deploy job run. In real use the trust file belongs to whoever owns deployments, in a repository this app's developers can't change; here it sits in the repo so the example is self-contained.
 
 ## Verify the image
 

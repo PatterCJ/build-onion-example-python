@@ -1,0 +1,23 @@
+# DEMO ONLY. A trust file belongs to whoever runs the deploy gate, in a
+# repository the app's developers can't change (a platform team's repo).
+# It lives here so the example is self-contained.
+apiVersion: build-onion/trust/v1
+builders:
+  # build-onion releases this gate accepts. Each was added with
+  # `onion trust add`, which checks the release tag's signature against the
+  # key below and verifies the sealed release.
+  - repository: PatterCJ/build-onion
+    tagSigners:
+      - ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIJkCMZITdqwz1HgiMqqI8TkJmT0MAnE723Nl24woUkCl build-onion release key
+    releases:
+      - tag: v0.1.0
+        commit: 7483e037e54953aea2c5f3180e1bcaf526b50edb
+        added: "2026-09-30"
+      - tag: v0.2.0
+        commit: 2573ede5ea811661d6e7d94188dd35b1ae132745
+        added: "2026-09-30"
+apps:
+  # This app deploys only from tags signed with its release key.
+  - repository: PatterCJ/build-onion-example-python
+    tagSigners:
+      - ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIIujAjvt3dTKRNS0rPMfN1ylGIIK6gt2SPJzBC7UziH4 pyonion release key
