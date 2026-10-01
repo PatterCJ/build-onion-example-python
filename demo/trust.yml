@@ -16,6 +16,12 @@ builders:
       - tag: v0.2.0
         commit: 2573ede5ea811661d6e7d94188dd35b1ae132745
         added: "2026-09-30"
+      - tag: v0.2.1
+        commit: eef9130eb38ada0d8c6ab0ea0dcc716974020fd4
+        added: "2026-10-01"
+      - tag: v0.3.0
+        commit: 58ad2ec8d5b2bac8da22fa1bf3184bf5d449776c
+        added: "2026-10-01"
 apps:
   # This app deploys only from tags signed with its release key.
   - repository: PatterCJ/build-onion-example-python

@@ -21,8 +21,8 @@ defaults:
 
 env:
   # The onion that runs the gate, pinned by digest.
-  ONION_VERSION: v0.2.0
-  ONION_SHA256: 8a39b80ea38fe480176d89b21c8ddf04c194c16848523559bcc13c02d8cd0edf
+  ONION_VERSION: v0.3.0
+  ONION_SHA256: a247e4bd9f0db41e6ff9daa4d8d5bacaeaf27a26178a1639352c5bffe18f9481
 
 jobs:
   verify:
