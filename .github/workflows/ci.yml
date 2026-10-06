@@ -20,6 +20,6 @@ jobs:
     permissions:
       contents: read
       id-token: write
-    uses: PatterCJ/build-onion/.github/workflows/onion-build.yml@ecdf77bb5effc53f50f06b07b79c6e62645d860c # v0.4.0
+    uses: PatterCJ/build-onion/.github/workflows/onion-build.yml@98b8686b6e079986f9345bd42c6679303349baa4 # v0.5.0
     with:
       policy: .build-onion/policy.yml
